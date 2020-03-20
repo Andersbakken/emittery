@@ -28,7 +28,6 @@ declare class Emittery {
 
 	@returns An unsubscribe method.
 	*/
-	on(eventName: typeof Emittery.listenerAdded | typeof Emittery.listenerRemoved, listener: (eventData: Emittery.ListenerChangedData) => void): Emittery.UnsubscribeFn
 	on(eventName: EventName, listener: (eventData?: unknown) => void): Emittery.UnsubscribeFn;
 
 	/**
@@ -97,7 +96,6 @@ declare class Emittery {
 
 	@returns The event data when `eventName` is emitted.
 	*/
-	once(eventName: typeof Emittery.listenerAdded | typeof Emittery.listenerRemoved): Promise<Emittery.ListenerChangedData>
 	once(eventName: EventName): Promise<unknown>;
 
 	/**
@@ -206,21 +204,6 @@ declare namespace Emittery {
 	interface Events {
 		// Blocked by https://github.com/microsoft/TypeScript/issues/1863, should be
 		// `[eventName: EventName]: unknown;`
-	}
-
-	/**
-	The data provided as `eventData` when listening for `Emittery.listenerAdded` or `Emittery.listenerRemoved`.
-	*/
-	interface ListenerChangedData {
-		/**
-		The listener that was added or removed.
-		*/
-		listener: (eventData?: unknown) => void;
-
-		/**
-		The name of the event that was added or removed if `.on()` or `.off()` was used, or `undefined` if `.onAny()` or `.offAny()` was used.
-		*/
-		eventName?: EventName;
 	}
 
 	/**

@@ -14,75 +14,10 @@ test('on()', async t => {
 	t.deepEqual(calls, [1, 2]);
 });
 
-test('on() - symbol eventName', async t => {
-	const emitter = new Emittery();
-	const eventName = Symbol('eventName');
-	const calls = [];
-	const listener1 = () => calls.push(1);
-	const listener2 = () => calls.push(2);
-	emitter.on(eventName, listener1);
-	emitter.on(eventName, listener2);
-	await emitter.emit(eventName);
-	t.deepEqual(calls, [1, 2]);
-});
-
-test('on() - listenerAdded', async t => {
-	const emitter = new Emittery();
-	const addListener = () => 1;
-	setImmediate(() => emitter.on('abc', addListener));
-	const {eventName, listener} = await pEvent(emitter, Emittery.listenerAdded, {
-		rejectionEvents: []
-	});
-	t.is(listener, addListener);
-	t.is(eventName, 'abc');
-});
-
-test('on() - listenerRemoved', async t => {
-	const emitter = new Emittery();
-	const addListener = () => 1;
-	emitter.on('abc', addListener);
-	setImmediate(() => emitter.off('abc', addListener));
-	const {eventName, listener} = await pEvent(emitter, Emittery.listenerRemoved, {
-		rejectionEvents: []
-	});
-	t.is(listener, addListener);
-	t.is(eventName, 'abc');
-});
-
-test('on() - listenerAdded onAny', async t => {
-	const emitter = new Emittery();
-	const addListener = () => 1;
-	setImmediate(() => emitter.onAny(addListener));
-	const {eventName, listener} = await pEvent(emitter, Emittery.listenerAdded, {
-		rejectionEvents: []
-	});
-	t.is(listener, addListener);
-	t.is(eventName, undefined);
-});
-
-test('off() - listenerAdded', t => {
-	const emitter = new Emittery();
-	const off = emitter.on(Emittery.listenerAdded, () => t.fail());
-	off();
-	emitter.emit('a');
-	t.pass();
-});
-
-test('on() - listenerAdded offAny', async t => {
-	const emitter = new Emittery();
-	const addListener = () => 1;
-	emitter.onAny(addListener);
-	setImmediate(() => emitter.offAny(addListener));
-	const {listener, eventName} = await pEvent(emitter, Emittery.listenerRemoved);
-	t.is(listener, addListener);
-	t.is(eventName, undefined);
-});
-
 test('on() - eventName must be a string or a symbol', t => {
 	const emitter = new Emittery();
 
 	emitter.on('string', () => {});
-	emitter.on(Symbol('symbol'), () => {});
 
 	t.throws(() => {
 		emitter.on(42, () => {});
@@ -205,7 +140,6 @@ test('off() - eventName must be a string or a symbol', t => {
 	const emitter = new Emittery();
 
 	emitter.on('string', () => {});
-	emitter.on(Symbol('symbol'), () => {});
 
 	t.throws(() => {
 		emitter.off(42);
@@ -232,7 +166,6 @@ test('once() - eventName must be a string or a symbol', async t => {
 	const emitter = new Emittery();
 
 	emitter.once('string');
-	emitter.once(Symbol('symbol'));
 
 	await t.throwsAsync(emitter.once(42), TypeError);
 });
@@ -277,7 +210,6 @@ test('emit() - eventName must be a string or a symbol', async t => {
 	const emitter = new Emittery();
 
 	emitter.emit('string');
-	emitter.emit(Symbol('symbol'));
 
 	await t.throwsAsync(emitter.emit(42), TypeError);
 });
