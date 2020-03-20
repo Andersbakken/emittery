@@ -1,9 +1,7 @@
 /**
-Emittery accepts strings and symbols as event names.
-
-Symbol event names can be used to avoid name collisions when your classes are extended, especially for internal events.
+Emittery accepts strings as event names.
 */
-type EventName = string | symbol;
+type EventName = string;
 
 declare class Emittery {
 	/**
@@ -22,60 +20,6 @@ declare class Emittery {
 	```
 	*/
 	static mixin(emitteryPropertyName: string, methodNames?: readonly string[]): Function;
-
-	/**
-	Fires when an event listener was added.
-
-	An object with `listener` and `eventName` (if `on` or `off` was used) is provided as event data.
-
-	@example
-	```
-	import Emittery = require('emittery');
-
-	const emitter = new Emittery();
-
-	emitter.on(Emittery.listenerAdded, ({listener, eventName}) => {
-		console.log(listener);
-		//=> data => {}
-
-		console.log(eventName);
-		//=> '🦄'
-	});
-
-	emitter.on('🦄', data => {
-		// Handle data
-	});
-	```
-	*/
-	static readonly listenerAdded: unique symbol;
-
-	/**
-	Fires when an event listener was removed.
-
-	An object with `listener` and `eventName` (if `on` or `off` was used) is provided as event data.
-
-	@example
-	```
-	import Emittery = require('emittery');
-
-	const emitter = new Emittery();
-
-	const off = emitter.on('🦄', data => {
-		// Handle data
-	});
-
-	emitter.on(Emittery.listenerRemoved, ({listener, eventName}) => {
-		console.log(listener);
-		//=> data => {}
-
-		console.log(eventName);
-		//=> '🦄'
-	});
-
-	off();
-	```
-	*/
-	static readonly listenerRemoved: unique symbol;
 
 	/**
 	Subscribe to an event.
