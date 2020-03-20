@@ -6,15 +6,6 @@ const producersMap = new WeakMap();
 const anyProducer = Symbol('anyProducer');
 const resolvedPromise = Promise.resolve();
 
-const listenerAdded = Symbol('listenerAdded');
-const listenerRemoved = Symbol('listenerRemoved');
-
-function assertEventName(eventName) {
-	if (typeof eventName !== 'string' && typeof eventName !== 'symbol') {
-		throw new TypeError('eventName must be a string or a symbol');
-	}
-}
-
 function assertListener(listener) {
 	if (typeof listener !== 'function') {
 		throw new TypeError('listener must be a function');
@@ -137,8 +128,6 @@ function defaultMethodNamesOrAssert(methodNames) {
 	return methodNames;
 }
 
-const isListenerSymbol = symbol => symbol === listenerAdded || symbol === listenerRemoved;
-
 class Emittery {
 	static mixin(emitteryPropertyName, methodNames) {
 		methodNames = defaultMethodNamesOrAssert(methodNames);
@@ -188,31 +177,20 @@ class Emittery {
 	}
 
 	on(eventName, listener) {
-		assertEventName(eventName);
 		assertListener(listener);
 		getListeners(this, eventName).add(listener);
-
-		if (!isListenerSymbol(eventName)) {
-			this.emit(listenerAdded, {eventName, listener});
-		}
 
 		return this.off.bind(this, eventName, listener);
 	}
 
 	off(eventName, listener) {
-		assertEventName(eventName);
 		assertListener(listener);
-
-		if (!isListenerSymbol(eventName)) {
-			this.emit(listenerRemoved, {eventName, listener});
-		}
 
 		getListeners(this, eventName).delete(listener);
 	}
 
 	once(eventName) {
 		return new Promise(resolve => {
-			assertEventName(eventName);
 			const off = this.on(eventName, data => {
 				off();
 				resolve(data);
@@ -221,19 +199,16 @@ class Emittery {
 	}
 
 	events(eventName) {
-		assertEventName(eventName);
 		return iterator(this, eventName);
 	}
 
 	async emit(eventName, eventData) {
-		assertEventName(eventName);
-
 		enqueueProducers(this, eventName, eventData);
 
 		const listeners = getListeners(this, eventName);
 		const anyListeners = anyMap.get(this);
 		const staticListeners = [...listeners];
-		const staticAnyListeners = isListenerSymbol(eventName) ? [] : [...anyListeners];
+		const staticAnyListeners = [...anyListeners];
 
 		await resolvedPromise;
 		return Promise.all([
@@ -251,8 +226,6 @@ class Emittery {
 	}
 
 	async emitSerial(eventName, eventData) {
-		assertEventName(eventName);
-
 		const listeners = getListeners(this, eventName);
 		const anyListeners = anyMap.get(this);
 		const staticListeners = [...listeners];
@@ -277,7 +250,6 @@ class Emittery {
 	onAny(listener) {
 		assertListener(listener);
 		anyMap.get(this).add(listener);
-		this.emit(listenerAdded, {listener});
 		return this.offAny.bind(this, listener);
 	}
 
@@ -325,10 +297,6 @@ class Emittery {
 				getEventProducers(this, eventName).size + getEventProducers(this).size;
 		}
 
-		if (typeof eventName !== 'undefined') {
-			assertEventName(eventName);
-		}
-
 		let count = anyMap.get(this).size;
 
 		for (const value of eventsMap.get(this).values()) {
@@ -369,19 +337,6 @@ Emittery.Typed = class extends Emittery {};
 Object.defineProperty(Emittery.Typed, 'Typed', {
 	enumerable: false,
 	value: undefined
-});
-
-Object.defineProperty(Emittery, 'listenerAdded', {
-	value: listenerAdded,
-	writable: false,
-	enumerable: true,
-	configurable: false
-});
-Object.defineProperty(Emittery, 'listenerRemoved', {
-	value: listenerRemoved,
-	writable: false,
-	enumerable: true,
-	configurable: false
 });
 
 module.exports = Emittery;
